@@ -1,4 +1,4 @@
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useOptimistic, useState } from "react";
 import CancelButton from "./CancelButton";
 
 type Post = {
@@ -15,6 +15,7 @@ type ActionStateType = {
 
 const UpdateName = () => {
   const [title, setTitle] = useState("");
+
   // useTransition
   // const [error, setError] = useState<Error | null>(null);
   // const [isPending, startTransition] = useTransition();
@@ -28,6 +29,7 @@ const UpdateName = () => {
     ): Promise<ActionStateType> => {
       console.log("formData", previousState);
       const newTitle = formData.get("title") as string;
+      setOptimisticTitle(newTitle);
       const error = await updateName(newTitle);
       if (error) {
         return { data: { title: newTitle }, error };
@@ -37,6 +39,14 @@ const UpdateName = () => {
     },
     // Make sure to pass the initial state like useReducer
     { data: { title: "" }, error: null }
+  );
+
+  // useOptimistic
+  const [optimisticTitle, setOptimisticTitle] = useOptimistic(
+    actionState.data.title,
+    (currentTitle, optimisticValue) => {
+      return `${currentTitle} (This is an optimistic result: ${optimisticValue})`;
+    }
   );
 
   const fetchTitle = async () => {
@@ -84,6 +94,7 @@ const UpdateName = () => {
   return (
     <div>
       <h2>Update title</h2>
+      <p>title: {optimisticTitle}</p>
       <form action={submitAction}>
         <input
           value={title}
