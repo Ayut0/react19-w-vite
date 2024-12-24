@@ -1,4 +1,5 @@
 import { useActionState, useEffect, useState } from "react";
+import CancelButton from "./CancelButton";
 
 type Post = {
   id: number;
@@ -95,6 +96,7 @@ const UpdateName = () => {
         <button type='submit' disabled={isPending}>
           Update
         </button>
+        <CancelButton />
         {actionState && <p style={{ color: "red" }}>{actionState.error}</p>}
       </form>
     </div>
