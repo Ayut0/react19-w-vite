@@ -1,5 +1,12 @@
-import { useActionState, useEffect, useOptimistic, useState } from "react";
+import {
+  useActionState,
+  useEffect,
+  useOptimistic,
+  useState,
+  Suspense,
+} from "react";
 import CancelButton from "./CancelButton";
+import Comments from "./Comments";
 
 type Post = {
   id: number;
@@ -13,8 +20,25 @@ type ActionStateType = {
   error: string | null;
 };
 
+export type Comment = {
+  id: number;
+  postId: number;
+  name: string;
+  email: string;
+  body: string;
+};
+
+const fetchComment = async () => {
+  const data = await fetch("https://jsonplaceholder.typicode.com/comments");
+  const comments: Comment[] = await data.json();
+  return comments;
+};
+
 const UpdateName = () => {
   const [title, setTitle] = useState("");
+
+  // use API
+  const commentsPromise = fetchComment();
 
   // useTransition
   // const [error, setError] = useState<Error | null>(null);
@@ -110,6 +134,10 @@ const UpdateName = () => {
         <CancelButton />
         {actionState && <p style={{ color: "red" }}>{actionState.error}</p>}
       </form>
+      <h3>Comments via use API</h3>
+      <Suspense fallback={<div>Loading comments...</div>}>
+        <Comments commentsPromise={commentsPromise} />
+      </Suspense>
     </div>
   );
 };
