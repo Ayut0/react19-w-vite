@@ -1,11 +1,18 @@
 import { use } from "react";
-import { Comment } from "./UpdateName";
+
+export type Comment = {
+  id: number;
+  postId: number;
+  name: string;
+  email: string;
+  body: string;
+};
 
 type Props = {
   commentsPromise: Promise<Comment[]>;
 };
 
-const Comments = ({ commentsPromise }: Props) => {
+export const Comments = ({ commentsPromise }: Props) => {
   const comments = use(commentsPromise);
   return (
     <div>
@@ -21,4 +28,3 @@ const Comments = ({ commentsPromise }: Props) => {
   );
 };
 
-export default Comments;
