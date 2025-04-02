@@ -81,9 +81,15 @@ function isCaseInsensitiveMatch(a: string, b: string): boolean {
   return a.toLowerCase() === b.toLowerCase()
 }
 
+function isFileExist(dirPath: string, componentName:string): boolean{
+    const componentPath = path.join(dirPath, `${componentName}.tsx`)
+    return fs.existsSync(componentPath)
+}
+
 // ディレクトリ内を再帰的に探索
 function searchDirectory(dirPath: string, componentName: string): string | null {
   const items = readDirSync(dirPath)
+  
   if (!items) {
     console.error(`ディレクトリが見つかりません: ${dirPath}`)
     return null
@@ -93,12 +99,14 @@ function searchDirectory(dirPath: string, componentName: string): string | null 
     const fullDirPath = path.join(dirPath, item)
     const stat = getStatSync(fullDirPath)
 
-    if (!stat) continue
+    const files = fs.readdirSync(fullDirPath)
+
+    // Skip if the item is not a directory or the component file with .tsx does not exist
+    // files.includes(`${componentName}.tsx`) is optional
+    if (!stat || !files.includes(`${componentName}.tsx`)) continue
 
     if(stat.isDirectory()){
-        const componentPath = path.join(fullDirPath, `${componentName}.tsx`)
-
-        if(isCaseInsensitiveMatch(item, componentName) && fs.existsSync(componentPath)){
+        if(isCaseInsensitiveMatch(item, componentName) && isFileExist(fullDirPath, componentName)){
             return fullDirPath
         }
 
