@@ -2,23 +2,25 @@ import fs from "fs"
 import path from "path"
 
 interface ComponentConfig {
-  srcDir: "./src"
+  srcDir: string
   componentNames: string[]
 }
 
-// 自動でStoryファイルを生成するスクリプト
-// 使い方: npm run generate-story コンポーネント名
+// This script generates a Storybook story file for a given component.
+// Usage: npm run generate-story <componentName>
+// Example: npm run generate-story Button
 
 // 実行時に指定したコンポーネントがcomponentNamesに含まれているかを確認し
-// コンポーネントが見つかったらそのStoryファイルを生成するので、必要に応じて変更してください
+// コンポーネントが見つればそのStoryファイルを生成する
 const config: ComponentConfig = {
   srcDir: "./src",
   componentNames: [
+    // Add your component directories here if necessary
    "components",
   ],
 }
 
-// コマンドライン引数からコンポーネント名を取得
+// Grab the component name from the command line arguments
 const componentName = process.argv[2]
 if (!componentName) {
   console.error("コンポーネント名を指定してください")
@@ -26,33 +28,31 @@ if (!componentName) {
 }
 
 function generateStoryTemplate(componentName: string, componentPath: string): string {
-  return `
-    import type { Meta, StoryObj } from "@storybook/react"
-    // This is useful if you want to spy on the certain action in the story such as onClick
-    import { fn } from '@storybook/test';
+  return `import type { Meta, StoryObj } from "@storybook/react"
+// This is useful if you want to spy on the certain action in the story such as onClick
+import { fn } from '@storybook/test';
 
-    import { ${componentName} } from "./${componentName}"
+import { ${componentName} } from "./${componentName}"
 
-    const meta = {
-        title: "${componentPath.replace(/^src\//, "")}",
-        component: ${componentName},
-        parameters: {
-        // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout
-        layout: 'centered',
-        },
-        // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
-        tags:["autodocs"]
-    } satisfies Meta<typeof ${componentName}>
+const meta = {
+    title: "${componentPath.replace(/^src\//, "")}",
+    component: ${componentName},
+    parameters: {
+    // Optional parameter to center the component in the Canvas. More info: https://storybook.js.org/docs/configure/story-layout
+    layout: 'centered',
+    },
+    // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
+    tags:["autodocs"]
+} satisfies Meta<typeof ${componentName}>
 
-    export default meta;
-    type Story = StoryObj<typeof ${componentName}>
+export default meta;
+type Story = StoryObj<typeof ${componentName}>
 
-    export const Default: Story = {
-        args: {
-            // ここにpropsを追加してください
-        }
+export const Default: Story = {
+    args: {
+        // ここにpropsを追加してください
     }
-  `
+}`
 }
 
 // Helper functions
@@ -93,21 +93,25 @@ function searchDirectory(dirPath: string, componentName: string): string | null 
     const fullDirPath = path.join(dirPath, item)
     const stat = getStatSync(fullDirPath)
 
-    if (!stat || !stat.isDirectory()) continue
+    if (!stat) continue
 
-    if (isCaseInsensitiveMatch(item, componentName)) {
-      const componentPath = path.join(fullDirPath, `${componentName}.tsx`)
-      if (fs.existsSync(componentPath)) return fullDirPath
+    if(stat.isDirectory()){
+        const componentPath = path.join(fullDirPath, `${componentName}.tsx`)
+
+        if(isCaseInsensitiveMatch(item, componentName) && fs.existsSync(componentPath)){
+            return fullDirPath
+        }
+
+        const result = searchDirectory(fullDirPath, componentName)
+        if (result) return result
     }
-    const result = searchDirectory(fullDirPath, componentName)
-    if (result) return result
   }
 
   return null
 }
 
 // コンポーネントを検索
-function findComponent(componentName: string) {
+function findComponent(componentName: string): string | null {
   for (const dir of config.componentNames) {
     const fullDirPath = path.join(config.srcDir, dir)
     if (!fs.existsSync(fullDirPath)) continue
@@ -124,7 +128,7 @@ function generateStory() {
   try {
     const componentDir = findComponent(componentName)
     if (!componentDir) {
-      console.error(`コンポーネントがsrc配下に見つかりません: ${componentName}`)
+      console.error(`コンポーネント${componentName}がsrc配下に見つかりません`)
       process.exit(1)
     }
 
@@ -141,7 +145,7 @@ function generateStory() {
     fs.writeFileSync(storyBookPath, storyContent)
     console.log(`Storyファイルを生成しました: ${storyBookPath}`)
   } catch (error) {
-    console.error('エラーが発生しました:', error)
+    console.error('エラーが発生しました:', error instanceof Error ? error.message : error)
     process.exit(1)
   }
 }
