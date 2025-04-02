@@ -5,8 +5,9 @@ import {
   useState,
   Suspense,
 } from "react";
-import CancelButton from "./CancelButton";
-import Comments from "./Comments";
+import { CancelButton } from "./components/cancelButton";
+import { Comments, type Comment } from "./components/comments/Comments";
+
 
 type Post = {
   id: number;
@@ -20,13 +21,6 @@ type ActionStateType = {
   error: string | null;
 };
 
-export type Comment = {
-  id: number;
-  postId: number;
-  name: string;
-  email: string;
-  body: string;
-};
 
 const fetchComment = async () => {
   const data = await fetch("https://jsonplaceholder.typicode.com/comments");
